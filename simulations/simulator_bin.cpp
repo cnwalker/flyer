@@ -1,9 +1,6 @@
 #include "simulation.h"
-#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string>
-#include <yaml-cpp/yaml.h>
 
 int main(int argc, char *argv[]) {
   int num_expected_args = 3;
