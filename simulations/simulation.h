@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <yaml-cpp/yaml.h>
 
 class Vec3 {
 public:
@@ -14,13 +15,28 @@ public:
   void print(std::string label);
 };
 
-class Particle {
-public:
-  double mass;
-  Vec3 *position;
-  Vec3 *velocity;
+/**
+ * Box, should support a simple drone body for now
+ */
+struct Box {
+  /**
+   * Box ID
+   */
+  unsigned int id;
 
-  Particle(double input_mass, Vec3 &input_position, Vec3 &input_velocity);
+  // Position of the center of mass of the rigid body
+  Vec3 *cm_pos;
+  Vec3 *velocity;
+  double mass;
+
+  double x_length;
+  double y_length;
+  double z_length;
+
+  Box(double input_x_length, double input_y_length, double input_z_length,
+            double input_mass, Vec3 &input_position, Vec3 &input_velocity);
+
+  void set_id(unsigned int input_id);
 
   void print();
 };
@@ -28,7 +44,7 @@ public:
 /**
  * Computes the force on a particle.
  */
-Vec3 compute_force(Particle &particle);
+Vec3 compute_force(Box &b);
 
 class Simulation {
 public:
@@ -43,19 +59,29 @@ public:
   void initialize_from_config(const std::string config_path);
 
   /**
+   * Function for parsing particles from the sim config YAML
+   */
+  void parse_particles(YAML::Node config, std::string particle_key);
+
+  /**
+   * Function for parsing boxes from the sim config YAML
+   */
+  void parse_boxes(YAML::Node config, std::string box_key);
+
+  /**
    * Runs the simulation.
    */
   void run();
 
   /**
-   * Adds a particle to the sim.
+   * Adds a box to the sim.
    */
-  void add_particle(Particle p);
+  void add_box(Box b);
 
   /**
-   * Prints all particles in the sim
+   * Prints all elements in the sim
    */
-  void print_particles();
+  void print_elements();
 
 private:
   /**
@@ -74,9 +100,14 @@ private:
   Clock *clock;
 
   /**
-   * List of particles to simulate.
+   * List of boxes to simulate
    */
-  std::vector<Particle> particles;
+  std::vector<Box> boxes;
+
+  /**
+   * Strictly increases number of added boxes
+   */
+  unsigned int num_boxes_added;
 
   /**
    * Runs a single step of the simulation

@@ -1,9 +1,6 @@
 #include "simulation.h"
-#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string>
-#include <yaml-cpp/yaml.h>
 
 /**
  * 9.81 m/s^2
@@ -24,27 +21,38 @@ void Vec3::print(std::string label = "") {
   std::cout << "(x: " << x << " y: " << y << " z: " << z << ")" << std::endl;
 };
 
-Particle::Particle(double input_mass, Vec3 &input_position,
-                   Vec3 &input_velocity) {
+Box::Box(double input_x_length, double input_y_length,
+                     double input_z_length, double input_mass,
+                     Vec3 &input_position, Vec3 &input_velocity) {
+  x_length = input_x_length;
+  y_length = input_y_length;
+  z_length = input_z_length;
   mass = input_mass;
-  position = new Vec3(input_position.x, input_position.y, input_position.z);
+  cm_pos = new Vec3(input_position.x, input_position.y, input_position.z);
   velocity = new Vec3(input_velocity.x, input_velocity.y, input_velocity.z);
 };
 
-void Particle::print() {
+void Box::set_id(unsigned int input_id) { id = input_id; };
+
+void Box::print() {
+  std::cout << "Box id " << id << std::endl;
   std::cout << "Position: "
-            << "(" << position->x << ", " << position->y << ", " << position->z
-            << ")" << std::endl;
+            << "(" << cm_pos->x << ", " << cm_pos->y << ", " << cm_pos->z << ")"
+            << std::endl;
   std::cout << "Velocity: "
             << "(" << velocity->x << ", " << velocity->y << ", " << velocity->z
             << ")" << std::endl;
 };
 
 /**
- * Creates a particle from YAML
+ * Creates a box from YAML
  */
-Particle create_particle_from_yaml(YAML::Node config) {
+Box create_box_from_yaml(YAML::Node config) {
   double mass = config["mass"].as<double>();
+
+  double x_length = config["x_length"].as<double>();
+  double y_length = config["y_length"].as<double>();
+  double z_length = config["z_length"].as<double>();
 
   YAML::Node pos_node = config["position"].as<YAML::Node>();
   double pos_x = pos_node["x"].as<double>();
@@ -60,7 +68,7 @@ Particle create_particle_from_yaml(YAML::Node config) {
 
   Vec3 velocity = Vec3(vel_x, vel_y, vel_z);
 
-  return Particle(mass, position, velocity);
+  return Box(x_length, y_length, z_length, mass, position, velocity);
 };
 
 /**
@@ -72,23 +80,32 @@ Simulation::Simulation(double step_interval, Clock *input_clock) {
   clock = input_clock;
 };
 
+void Simulation::parse_boxes(YAML::Node config,
+                                  std::string box_key) {
+  if (!config[box_key]) {
+    return;
+  }
+  YAML::Node rect_confs = config[box_key];
+
+  int boxes_added = 0;
+  for (YAML::const_iterator it = rect_confs.begin(); it != rect_confs.end();
+       it++) {
+    Box b = create_box_from_yaml(it->second.as<YAML::Node>());
+    b.set_id(boxes_added);
+    add_box(b);
+    boxes_added++;
+  }
+
+  std::cout << "Added " << boxes_added << " boxes" << std::endl;
+}
+
 /**
  * Initializes a simulation based on config.
  */
 void Simulation::initialize_from_config(const std::string config_path) {
   std::cout << "Reading config from: " << config_path << std::endl;
   YAML::Node config = YAML::LoadFile(config_path);
-  YAML::Node particles = config["particles"].as<YAML::Node>();
-
-  int num_particles = 0;
-  for (YAML::const_iterator it = particles.begin(); it != particles.end();
-       it++) {
-    Particle p = create_particle_from_yaml(it->second.as<YAML::Node>());
-    add_particle(p);
-    num_particles++;
-  }
-
-  std::cout << "Added " << num_particles << " particles" << std::endl;
+  parse_boxes(config, "boxes");
 };
 
 /**
@@ -108,17 +125,20 @@ void Simulation::run() {
 };
 
 /**
- * Adds a particle to the sim.
+ * Adds a box to the sim.
  */
-void Simulation::add_particle(Particle p) { particles.push_back(p); };
+void Simulation::add_box(Box b) { boxes.push_back(b); };
 
 /**
- * Prints all particles in the sim
+ * Prints all  in the sim
  */
-void Simulation::print_particles() {
-  for (int i = 0; i < particles.size(); i++) {
-    Particle p = particles.at(i);
-    p.print();
+void Simulation::print_elements() {
+  /**
+   * Next print the boxes
+   */
+  for (int i = 0; i < boxes.size(); i++) {
+    Box b = boxes.at(i);
+    b.print();
     std::cout << std::endl;
   }
 }
@@ -126,36 +146,36 @@ void Simulation::print_particles() {
 /**
  * Computes the force on a particle.
  */
-Vec3 compute_force(Particle &particle) {
+Vec3 compute_force(Box &b) {
   /**
    * Currently we only support the force of gravity.
    */
-  return Vec3(0, particle.mass * ACCELERATION_DUE_TO_EARTH_GRAVITY, 0);
+  return Vec3(0, b.mass * ACCELERATION_DUE_TO_EARTH_GRAVITY, 0);
 };
 
 /**
  * Runs a single step of the simulation
  */
 void Simulation::run_step() {
-  for (size_t i = 0; i < particles.size(); i++) {
-    Particle p = particles.at(i);
-    Vec3 force = compute_force(p);
+  for (size_t i = 0; i < boxes.size(); i++) {
+    Box b = boxes.at(i);
+    Vec3 force = compute_force(b);
     // F = ma, a = F/m
-    Vec3 accel = Vec3(force.x / p.mass, force.y / p.mass, force.z / p.mass);
+    Vec3 accel = Vec3(force.x / b.mass, force.y / b.mass, force.z / b.mass);
     // v = a(dt)
-    p.velocity->x += accel.x * step_interval_s;
-    p.velocity->y += accel.y * step_interval_s;
-    p.velocity->z += accel.z * step_interval_s;
+    b.velocity->x += accel.x * step_interval_s;
+    b.velocity->y += accel.y * step_interval_s;
+    b.velocity->z += accel.z * step_interval_s;
     // pos = v(dt)
-    p.position->x += p.velocity->x * step_interval_s;
-    p.position->y += p.velocity->y * step_interval_s;
-    p.position->z += p.velocity->z * step_interval_s;
+    b.cm_pos->x += b.velocity->x * step_interval_s;
+    b.cm_pos->y += b.velocity->y * step_interval_s;
+    b.cm_pos->z += b.velocity->z * step_interval_s;
   }
 
   std::cout << "Step " << num_steps << " (current time "
             << clock->get_current_time_ns() << ")"
             << ":" << std::endl;
-  print_particles();
+  print_elements();
   std::cout << std::endl;
   num_steps++;
 };
