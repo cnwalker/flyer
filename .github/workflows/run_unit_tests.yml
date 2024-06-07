@@ -11,7 +11,7 @@ on:
 jobs:
   build-project:
     runs-on: ubuntu-latest
-  
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.6
@@ -20,11 +20,12 @@ jobs:
         name: Configure Project
         uses: threeal/cmake-action@v1.3.0
         with:
-          build-dir: build
+          source-dir: simulations
+          build-dir: simulations/build
 
       - id: build_executables
-        name: Build Executables
-        run: cmake --build ${{ github.workspace }}/build
+        name: Build Simulation Executables
+        run: cmake --build ${{ github.workspace }}/simulations/build
 
-      - name: Run tests
-        run: ${{ github.workspace }}/build/tests
+      - name: Run Simulation Unit Tests
+        run: ${{ github.workspace }}/simulations/build/tests

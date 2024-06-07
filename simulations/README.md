@@ -1,9 +1,13 @@
 # Simulations
+You can configure the sim repo for cmake with:
+
+```
+cmake .
+```
+
 Build the engine with:
 
 ```
-mkdir build
-cd build
 cmake --build .
 ```
 
