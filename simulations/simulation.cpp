@@ -21,9 +21,8 @@ void Vec3::print(std::string label = "") {
   std::cout << "(x: " << x << " y: " << y << " z: " << z << ")" << std::endl;
 };
 
-Box::Box(double input_x_length, double input_y_length,
-                     double input_z_length, double input_mass,
-                     Vec3 &input_position, Vec3 &input_velocity) {
+Box::Box(double input_x_length, double input_y_length, double input_z_length,
+         double input_mass, Vec3 &input_position, Vec3 &input_velocity) {
   x_length = input_x_length;
   y_length = input_y_length;
   z_length = input_z_length;
@@ -80,8 +79,7 @@ Simulation::Simulation(double step_interval, Clock *input_clock) {
   clock = input_clock;
 };
 
-void Simulation::parse_boxes(YAML::Node config,
-                                  std::string box_key) {
+void Simulation::parse_boxes(YAML::Node config, std::string box_key) {
   if (!config[box_key]) {
     return;
   }
