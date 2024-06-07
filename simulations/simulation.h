@@ -34,7 +34,7 @@ struct Box {
   double z_length;
 
   Box(double input_x_length, double input_y_length, double input_z_length,
-            double input_mass, Vec3 &input_position, Vec3 &input_velocity);
+      double input_mass, Vec3 &input_position, Vec3 &input_velocity);
 
   void set_id(unsigned int input_id);
 
