@@ -19,9 +19,9 @@ endif()
 
 add_executable(
     simulator
-    simulations/simulator_bin.cpp
-    simulations/simulation.cpp
-    simulations/simulation.h
+    src/simulator_bin.cpp
+    src/simulation.cpp
+    src/simulation.h
 )
 
 target_link_libraries(
@@ -40,7 +40,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
-add_executable(tests simulations/tests.cpp simulations/simulation.h simulations/simulation.cpp)
+add_executable(tests src/tests.cpp src/simulation.h src/simulation.cpp)
 target_link_libraries(
     tests
     PRIVATE
