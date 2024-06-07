@@ -1,0 +1,30 @@
+name: Unit Tests
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    branches:
+    - 'main'
+
+jobs:
+  build-project:
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.6
+
+      - id: config_project
+        name: Configure Project
+        uses: threeal/cmake-action@v1.3.0
+        with:
+          build-dir: build
+
+      - id: build_executables
+        name: Build Executables
+        run: cmake --build ${{ github.workspace }}/build
+
+      - name: Run tests
+        run: ${{ github.workspace }}/build/tests
