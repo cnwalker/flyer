@@ -2,7 +2,9 @@
 You can configure the sim repo for cmake with:
 
 ```
-cmake .
+mkdir build
+cd build
+cmake ..
 ```
 
 Build the engine with:
