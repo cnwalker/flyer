@@ -22,6 +22,8 @@ add_executable(
     src/simulator_bin.cpp
     src/simulation.cpp
     src/simulation.h
+    ../telemetry/telem.cpp
+    ../telemetry/telem.h
 )
 
 target_link_libraries(
