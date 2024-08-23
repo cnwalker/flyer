@@ -9,7 +9,7 @@ on:
     - 'main'
 
 jobs:
-  build-project:
+  build-sims:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,3 +29,24 @@ jobs:
 
       - name: Run Simulation Unit Tests
         run: ${{ github.workspace }}/simulations/build/tests
+
+  build-telem:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.6
+
+      - id: config_project
+        name: Configure Project
+        uses: threeal/cmake-action@v1.3.0
+        with:
+          source-dir: telemetry
+          build-dir: telemetry/build
+
+      - id: build_executables
+        name: Build Telemetry Executables
+        run: cmake --build ${{ github.workspace }}/telemetry/build
+
+      - name: Run Telemetry Unit Tests
+        run: ${{ github.workspace }}/telemetry/build/tests
